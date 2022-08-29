@@ -1,0 +1,179 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "uniqueString": {
+            "type": "string",
+            "maxLength": 5,
+            "minLength": 2
+        }
+    },
+    "variables": {
+        "appInsName": "[concat('appins-',parameters('uniqueString'),'-weu-001d')]",
+        "hostingPlanNamefapp": "[concat('aspy-',parameters('uniqueString'),'-weu-001d')]",
+        "storageAccountName": "[concat('st',parameters('uniqueString'),'weu001d')]",
+        "fapp": "[concat('fapp-',parameters('uniqueString'),'-weu-001d')]",
+        "hostingPlanName": "[concat('asp-',parameters('uniqueString'),'-weu-001d')]",
+        "webAppName": "[concat('app-',parameters('uniqueString'),'-weu-001d')]",
+        "sbnName": "[concat('sbn-',parameters('uniqueString'),'-weu-001d')]"
+    },
+    "resources": [
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2020-02-02",
+            "name": "[variables('appInsName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "RetentionInDays": 30,
+                "IngestionMode": "ApplicationInsights",
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[variables('hostingPlanNamefapp')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('hostingPlanNamefapp')]",
+                "computeMode": "Dynamic"
+            },
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-11-01",
+                    "name": "[variables('fapp')]",
+                    "type": "Microsoft.Web/sites",
+                    "kind": "functionapp",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanNamefapp'))]",
+                        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+                        "[concat('Microsoft.Insights/components/', variables('appInsName'))]"
+                    ],
+                    "properties": {
+                        "siteConfig": {
+                            "numberOfWorkers": 1,
+                            "acrUseManagedIdentityCreds": false,
+                            "alwaysOn": false,
+                            "http20Enabled": false,
+                            "functionAppScaleLimit": 0,
+                            "minimumElasticInstanceCount": 0,
+                            "appSettings": [
+                                {
+                                    "name": "FUNCTIONS_EXTENSION_VERSION",
+                                    "value": "~4"
+                                },
+                                {
+                                    "name": "FUNCTIONS_WORKER_RUNTIME",
+                                    "value": "dotnet"
+                                },
+                                {
+                                    "name": "AzureWebJobsStorage",
+                                    "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                                },
+                                {
+                                    "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                                    "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                                },
+                                {
+                                    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                                    "value": "[reference(concat('microsoft.insights/components/',variables('appInsName')), '2015-05-01').InstrumentationKey]"
+                                },
+                                {
+                                    "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                                    "value": "[reference(concat('microsoft.insights/components/',variables('appInsName')), '2015-05-01').ConnectionString]"
+                                }
+                            ]
+                        },
+                        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanNamefapp'))]",
+                        "clientAffinityEnabled": true
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[variables('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[variables('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [],
+            "properties": {
+                "name": "[variables('hostingPlanName')]",
+                "workerSize": "0",
+                "workerSizeId": "0",
+                "numberOfWorkers": "1",
+                "zoneRedundant": false
+            },
+            "sku": {
+                "Tier": "Free",
+                "Name": "F1"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-11-01",
+                    "name": "[variables('webAppName')]",
+                    "type": "Microsoft.Web/sites",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+                        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+                        "[concat('Microsoft.Insights/components/', variables('appInsName'))]"
+                    ],
+                    "properties": {
+                        "name": "[variables('webAppName')]",
+                        "siteConfig": {
+                            "appSettings": [],
+                            "metadata": [
+                                {
+                                    "name": "CURRENT_STACK",
+                                    "value": "dotnet"
+                                }
+                            ],
+                            "netFrameworkVersion": "v6.0"
+                        },
+                        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                        "clientAffinityEnabled": true,
+                        "virtualNetworkSubnetId": null,
+                        "httpsOnly": true
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.ServiceBus/namespaces",
+            "apiVersion": "2022-01-01-preview",
+            "name": "[variables('sbnName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 1
+            },
+            "properties": {
+                "minimumTlsVersion": "1.2"
+            }
+        }
+    ]
+}
