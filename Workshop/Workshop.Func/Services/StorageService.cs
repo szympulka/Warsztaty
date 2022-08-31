@@ -14,7 +14,7 @@ namespace Workshop.Func.Services
 
         public StorageService(ILogger<StorageService> logger)
         {
-            this.queueClient = new QueueClient("DefaultEndpointsProtocol=https;AccountName=stqwerweu001d;AccountKey=InVsjtqOfqxZ8xxvZ2BRU4oz2VVpM0vNZjNofOgrfMEGSibG0NyfSS5tJAQjdwYd8IFllJVQUUtD+AStvvYEiw==;EndpointSuffix=core.windows.net", "queue", new QueueClientOptions
+            this.queueClient = new QueueClient("", "queue", new QueueClientOptions
             {
                 MessageEncoding = QueueMessageEncoding.None
             });

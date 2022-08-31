@@ -17,7 +17,7 @@ namespace Workshop.Func.Services
 
         public ServiceBusService(IFunctionPipeline functionPipeline, ILogger<ServiceBusService> logger)
         {
-            serviceBusClient = new ServiceBusClient("Endpoint=sb://sbn-qwer-weu-001d.servicebus.windows.net/;SharedAccessKeyName=hello;SharedAccessKey=+4DeSbeO3y4EE1mUv4Ayd5ktJ0SOvYYG5S3pTgSd/p8=;EntityPath=queue");
+            serviceBusClient = new ServiceBusClient("");
             this.functionPipeline = functionPipeline;
             this.logger = logger;
         }

@@ -13,7 +13,10 @@
         "hostingPlanNamefapp": "[concat('aspy-',parameters('uniqueString'),'-weu-001d')]",
         "storageAccountName": "[concat('st',parameters('uniqueString'),'weu001d')]",
         "fapp": "[concat('fapp-',parameters('uniqueString'),'-weu-001d')]",
-        "sbnName": "[concat('sbn-',parameters('uniqueString'),'-weu-001d')]"
+        "sbnName": "[concat('sbn-',parameters('uniqueString'),'-weu-001d')]",
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "sbVersion": "2022-01-01-preview",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('sbnName'), variables('defaultSASKeyName'))]"
     },
     "resources": [
         {
@@ -87,6 +90,14 @@
                                 {
                                     "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
                                     "value": "[reference(concat('microsoft.insights/components/',variables('appInsName')), '2015-05-01').ConnectionString]"
+                                },
+                                {
+                                    "name": "sbConnectionString",
+                                    "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
+                                },
+                                {
+                                    "name": "stConnetionString",
+                                    "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
                                 }
                             ]
                         },

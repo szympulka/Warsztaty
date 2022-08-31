@@ -17,7 +17,7 @@ namespace Workshop.Func.Functions
         }
 
         [FunctionName("ServiceBusFunctions")]
-        public void Run([ServiceBusTrigger("queue", Connection = "sbConnetionString")] Message message, ILogger log)
+        public void Run([ServiceBusTrigger("queue", Connection = "sbConnectionString")] Message message, ILogger log)
         {
             using var pipeline = functionPipeline.CreateContext(message);
             log.LogInformation($"C# ServiceBus queue trigger function processed message");
@@ -25,7 +25,7 @@ namespace Workshop.Func.Functions
         }
 
         [FunctionName("DeadLetterQueue")]
-        public void DeadLetterQueue([ServiceBusTrigger("queue/$DeadLetterQueue", Connection = "sbConnetionString")] Message myQueueItem, ILogger log)
+        public void DeadLetterQueue([ServiceBusTrigger("queue/$DeadLetterQueue", Connection = "sbConnectionString")] Message myQueueItem, ILogger log)
         {
             log.LogInformation($"C# ServiceBus queue trigger function processed message");
         }

@@ -13,16 +13,18 @@ namespace Workshop.Func.Functions
     {
         private readonly IFunctionPipeline functionPipeline;
         private readonly IServiceBusService serviceBusService;
+        private readonly IStorageService storageService;
 
-        public QueueFunctions(IFunctionPipeline functionPipeline, IServiceBusService serviceBusService)
+        public QueueFunctions(IFunctionPipeline functionPipeline, IServiceBusService serviceBusService, IStorageService storageService)
         {
             this.functionPipeline = functionPipeline;
             this.serviceBusService = serviceBusService;
+            this.storageService = storageService;
         }
 
 
         [FunctionName("QueueFunctions")]
-        public void Run([QueueTrigger("queue", Connection = "storageConnetionString")] string myQueueItem, ILogger log)
+        public void Run([QueueTrigger("queue", Connection = "stConnetionString")] string myQueueItem, ILogger log)
         {
             var data = JsonConvert.DeserializeObject<MessageDto>(myQueueItem);
             using var pipeline = functionPipeline.CreateContext(data.CorrelationId);
@@ -43,5 +45,17 @@ namespace Workshop.Func.Functions
             }
 
         }
+
+        //[FunctionName("QueueScalability")]
+        //public void QueueScalability([QueueTrigger("queue2", Connection = "stConnetionString")] string myQueueItem, ILogger log)
+        //{
+        //    var queueClient = new QueueClient("", "queue2", new QueueClientOptions
+        //    {
+        //        MessageEncoding = QueueMessageEncoding.Base64
+        //    });
+        //    queueClient.SendMessage("qwe");
+        //    queueClient.SendMessage("qwe");
+        //    queueClient.SendMessage("qwe");
+        //}
     }
 }
