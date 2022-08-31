@@ -1,3 +1,4 @@
+using Azure.Storage.Queues;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -24,7 +25,7 @@ namespace Workshop.Func.Functions
 
 
         [FunctionName("QueueFunctions")]
-        public void Run([QueueTrigger("queue", Connection = "stConnetionString")] string myQueueItem, ILogger log)
+        public void Run([QueueTrigger("queue", Connection = "storageConnetionString")] string myQueueItem, ILogger log)
         {
             var data = JsonConvert.DeserializeObject<MessageDto>(myQueueItem);
             using var pipeline = functionPipeline.CreateContext(data.CorrelationId);
@@ -46,16 +47,16 @@ namespace Workshop.Func.Functions
 
         }
 
-        //[FunctionName("QueueScalability")]
-        //public void QueueScalability([QueueTrigger("queue2", Connection = "stConnetionString")] string myQueueItem, ILogger log)
-        //{
-        //    var queueClient = new QueueClient("", "queue2", new QueueClientOptions
-        //    {
-        //        MessageEncoding = QueueMessageEncoding.Base64
-        //    });
-        //    queueClient.SendMessage("qwe");
-        //    queueClient.SendMessage("qwe");
-        //    queueClient.SendMessage("qwe");
-        //}
+        [FunctionName("QueueScalability")]
+        public void QueueScalability([QueueTrigger("queue2", Connection = "storageConnetionString")] string myQueueItem, ILogger log)
+        {
+            var queueClient = new QueueClient("DefaultEndpointsProtocol=https;AccountName=stqwerweu001d;AccountKey=InVsjtqOfqxZ8xxvZ2BRU4oz2VVpM0vNZjNofOgrfMEGSibG0NyfSS5tJAQjdwYd8IFllJVQUUtD+AStvvYEiw==;EndpointSuffix=core.windows.net", "queue", new QueueClientOptions
+            {
+                MessageEncoding = QueueMessageEncoding.None
+            });
+            queueClient.SendMessage("qwe");
+            queueClient.SendMessage("qwe");
+            queueClient.SendMessage("qwe");
+        }
     }
 }
